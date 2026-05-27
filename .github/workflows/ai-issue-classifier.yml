@@ -1,0 +1,36 @@
+name: AI Issue Classifier
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  ai-assessment:
+    if: github.event.label.name == 'request ai review'
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      models: read
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run AI issue classification
+        id: ai-assessment
+        uses: github/ai-assessment-comment-labeler@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue_number: ${{ github.event.issue.number }}
+          issue_body: |
+            Title: ${{ github.event.issue.title }}
+
+            Body:
+            ${{ github.event.issue.body }}
+          repo_name: ${{ github.event.repository.name }}
+          owner: ${{ github.repository_owner }}
+          ai_review_label: 'request ai review'
+          prompts_directory: './Prompts'
+          labels_to_prompts_mapping: 'request ai review,issue-classification.prompt.yml'
